@@ -169,14 +169,7 @@ cd dashboard_web
 python app.py
 ```
 
-## 📝 TODO
 
-- [ ] Export data ke Excel/PDF
-- [ ] Real-time notifications
-- [ ] Mobile app integration
-- [ ] Advanced analytics
-- [ ] Multi-camera support
-- [ ] Cloud storage integration
 
 ## 📞 Support
 
