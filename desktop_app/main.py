@@ -353,7 +353,7 @@ class EmployeeRegistrationDialog:
         self.departemen_var = tk.StringVar()
         departemen_combo = ttk.Combobox(main_frame, textvariable=self.departemen_var, 
                                        font=("Arial", 10), width=28)
-        departemen_combo['values'] = ('IT', 'HR', 'Finance', 'Marketing', 'Operations', 'Sales')
+        departemen_combo['values'] = ('Finance & ICT', 'Human Capital', 'Supply Chain', 'Exploration', 'Exploitation', 'Internal Affairs', 'External Audit', 'Production')
         departemen_combo.pack(pady=(0, 10), fill="x")
         
         # Posisi
