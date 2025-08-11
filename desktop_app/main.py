@@ -211,11 +211,10 @@ class AbsensiApp:
 
                     face_image = frame[top:bottom, left:right]
 
-                    log_image_path = os.path.abspath(os.path.join(
-                        self.log_dir, 
-                        f"{employee_data['nama']}_{tanggal}_{datetime.datetime.now().strftime('%H-%M-%S')}.jpg"
-                    ))
-                    cv2.imwrite(log_image_path, face_image)
+                    filename = f"{employee_data['nama']}_{tanggal}_{datetime.datetime.now().strftime('%H-%M-%S')}.jpg"
+                    local_path = os.path.join(self.log_dir, filename)  # Simpan di lokal
+                    cv2.imwrite(local_path, face_image)
+                    rel_path = f"images/{filename}"  # Simpan ke DB path relatif
 
                     try:
                         cursor = self.conn.cursor()
@@ -229,7 +228,7 @@ class AbsensiApp:
                                 employee_data['posisi'], 
                                 tanggal, 
                                 jam, 
-                                log_image_path
+                                rel_path
                             ))
                         else:
                             cursor.execute('''
@@ -241,7 +240,7 @@ class AbsensiApp:
                                 employee_data['posisi'], 
                                 tanggal, 
                                 jam, 
-                                log_image_path
+                                rel_path
                             ))
                         
                         self.conn.commit()
@@ -360,3 +359,4 @@ class EmployeeRegistrationDialog:
 if __name__ == "__main__":
     root = tk.Tk()
     app = AbsensiApp(root)
+    root.mainloop()
