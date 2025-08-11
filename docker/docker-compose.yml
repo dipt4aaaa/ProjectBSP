@@ -40,7 +40,7 @@ services:
     networks:
       - absensi_network
     volumes:
-      - ../log_absensi:/app/static/images:ro # Mount log absensi folder as read-only
+      - ../desktop_app/log_absensi:/app/static/images:ro # Mount log absensi folder as read-only
 
   # pgAdmin (Optional - for database management)
   pgadmin:
