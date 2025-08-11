@@ -26,6 +26,7 @@ share/python-wheels/
 venv/
 env/
 ENV/
+env39/
 
 # IDE
 .vscode/
@@ -97,3 +98,8 @@ pgadmin_data/
 
 # Docker volumes
 postgres_data/
+
+# Ignore folder data wajah dan log absensi
+desktop_app/data_wajah/
+desktop_app/log_absensi/
+

@@ -5,11 +5,29 @@ Sistem absensi berbasis pengenalan wajah dengan arsitektur terpisah antara aplik
 ## 🏗️ Arsitektur Sistem
 
 ```
-├── desktop_app/          # Aplikasi Tkinter untuk pendaftaran dan absensi
-├── dashboard_web/        # Web dashboard HR (Flask)
-├── docker/              # Docker configuration
-├── data_wajah/          # Penyimpanan foto dan encoding wajah
-├── log_absensi/         # Log foto absensi
+Project_BSP/
+├── 🖥️ desktop_app/              # Aplikasi Desktop Tkinter
+│   ├── main.py                   # Aplikasi utama (MODIFIED)
+│   ├── requirements.txt          # Dependencies Python
+│   └── desktop_database.py       # Database configuration khusus untuk desktop app
+│
+├── 🌐 dashboard_web/             # Web Dashboard HR
+│   ├── app.py                    # Flask application
+│   ├── requirements.txt          # Dependencies web
+│   ├── .env.example             # Template environment
+│   └── templates/               # HTML Templates
+│       ├── base.html            # Template dasar
+│       ├── dashboard.html       # Halaman dashboard
+│       ├── log_absensi.html     # Halaman log absensi
+│       └── statistik.html       # Halaman statistik
+│
+├── 🐳 docker/                    # Docker Configuration
+│   ├── docker-compose.yml       # Orchestrasi services
+│   ├── Dockerfile.web          # Container web dashboard
+│   ├── init.sql                # Schema database
+│   └── pgadmin_servers.json    # Konfigurasi pgAdmin
+│
+└── 📚 README.md                 # Dokumentasi lengkap
 
 ```
 
