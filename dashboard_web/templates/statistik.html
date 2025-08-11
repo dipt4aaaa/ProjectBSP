@@ -611,7 +611,7 @@
                 }
 
                 charts.topPerformers = new Chart(ctx, {
-                    type: 'horizontalBar',
+                    type: 'bar',
                     data: {
                         labels: top10.map(emp => emp.nama),
                         datasets: [{
@@ -623,6 +623,7 @@
                         }]
                     },
                     options: {
+                        indexAxis: 'y',
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {

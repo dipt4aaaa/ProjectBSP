@@ -28,11 +28,6 @@ CREATE INDEX IF NOT EXISTS idx_log_absensi_nama ON log_absensi(nama);
 CREATE INDEX IF NOT EXISTS idx_log_absensi_departemen ON log_absensi(departemen);
 CREATE INDEX IF NOT EXISTS idx_karyawan_nama ON karyawan(nama);
 
--- Insert sample data for testing (optional)
--- INSERT INTO karyawan (nama, departemen, posisi) VALUES 
--- ('John Doe', 'IT', 'Manager'),
--- ('Jane Smith', 'HR', 'Senior Staff'),
--- ('Bob Johnson', 'Finance', 'Staff');
 
 -- Grant necessary permissions
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO postgres;

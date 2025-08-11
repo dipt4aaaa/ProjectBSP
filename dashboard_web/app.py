@@ -2,7 +2,7 @@ from flask import Flask, render_template, jsonify, request
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta,time
 import calendar
 import os
 
@@ -83,7 +83,8 @@ def api_log_absensi():
         end_date = request.args.get('end_date')
         nama = request.args.get('nama')
         departemen = request.args.get('departemen')
-        
+        limit = request.args.get('limit', 1000, type=int)
+
         # Base query
         query = """
             SELECT nama, departemen, posisi, tanggal, jam, path_gambar, created_at
@@ -91,33 +92,43 @@ def api_log_absensi():
             WHERE 1=1
         """
         params = []
-        
+
         # Add filters
         if start_date:
             query += " AND tanggal >= %s" if db.db_type == 'postgresql' else " AND tanggal >= ?"
             params.append(start_date)
-        
         if end_date:
             query += " AND tanggal <= %s" if db.db_type == 'postgresql' else " AND tanggal <= ?"
             params.append(end_date)
-        
         if nama:
-            query += " AND nama ILIKE %s" if db.db_type == 'postgresql' else " AND nama LIKE ?"
-            params.append(f"%{nama}%")
-        
+            query += " AND nama = %s" if db.db_type == 'postgresql' else " AND nama = ?"
+            params.append(nama)
         if departemen:
             query += " AND departemen = %s" if db.db_type == 'postgresql' else " AND departemen = ?"
             params.append(departemen)
-        
-        query += " ORDER BY tanggal DESC, jam DESC LIMIT 1000"
-        
+
+        query += " ORDER BY tanggal DESC, jam DESC"
+        if limit:
+            query += f" LIMIT {limit}"
+
         logs = db.execute_query(query, params)
+
+        # Konversi kolom 'jam' menjadi string
+        for log in logs:
+            if 'jam' in log:
+                jam_value = log['jam']
+                if jam_value is not None:
+                    if isinstance(jam_value, time):
+                        log['jam'] = jam_value.strftime('%H:%M:%S')
+                    else:
+                        log['jam'] = str(jam_value)
+
         return jsonify({
             'success': True,
             'data': logs
         })
-        
     except Exception as e:
+        print("Error in /api/log-absensi:", e)
         return jsonify({
             'success': False,
             'error': str(e)

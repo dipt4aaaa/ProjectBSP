@@ -13,36 +13,11 @@ import json
 # Import database config lokal
 from desktop_database_config import DesktopDatabaseConfig
 
-# Optional GFPGAN import dengan error handling
-try:
-    from gfpgan import GFPGANer
-    GFPGAN_AVAILABLE = True
-except ImportError:
-    print("⚠️ GFPGAN not available - photos will not be enhanced")
-    GFPGAN_AVAILABLE = False
-
 class AbsensiApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Sistem Absensi Face Recognition")
         self.root.geometry("900x700")
-
-        # Inisialisasi GFPGAN jika tersedia
-        if GFPGAN_AVAILABLE:
-            try:
-                self.gfpgan = GFPGANer(
-                    model_path="https://github.com/TencentARC/GFPGAN/releases/download/v1.3.4/GFPGANv1.4.pth",
-                    upscale=1,
-                    arch="clean",
-                    channel_multiplier=2,
-                    bg_upsampler=None
-                )
-                print("✅ GFPGAN initialized")
-            except Exception as e:
-                print(f"⚠️ GFPGAN initialization failed: {e}")
-                self.gfpgan = None
-        else:
-            self.gfpgan = None
 
         # Inisialisasi direktori
         self.data_dir = "data_wajah"
@@ -217,7 +192,7 @@ class AbsensiApp:
             face_encodings = face_recognition.face_encodings(frame, face_locations)
 
             for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
-                matches = face_recognition.compare_faces(self.known_face_encodings, face_encoding)
+                matches = face_recognition.compare_faces(self.known_face_encodings, face_encoding, tolerance=0.45)
                 employee_data = None
 
                 if True in matches:
@@ -236,24 +211,11 @@ class AbsensiApp:
 
                     face_image = frame[top:bottom, left:right]
 
-                    # Enhance dengan GFPGAN jika tersedia
-                    if self.gfpgan:
-                        try:
-                            _, restored_faces, _ = self.gfpgan.enhance(face_image, has_aligned=False, only_center_face=True)
-                            restored_face = restored_faces[0]
-                            print("✅ Photo enhanced with GFPGAN")
-                        except Exception as e:
-                            restored_face = face_image
-                            print(f"⚠️ GFPGAN enhancement failed: {e}")
-                    else:
-                        restored_face = face_image
-                        print("📷 Using original photo (GFPGAN not available)")
-
                     log_image_path = os.path.abspath(os.path.join(
                         self.log_dir, 
                         f"{employee_data['nama']}_{tanggal}_{datetime.datetime.now().strftime('%H-%M-%S')}.jpg"
                     ))
-                    cv2.imwrite(log_image_path, restored_face)
+                    cv2.imwrite(log_image_path, face_image)
 
                     try:
                         cursor = self.conn.cursor()
@@ -398,4 +360,3 @@ class EmployeeRegistrationDialog:
 if __name__ == "__main__":
     root = tk.Tk()
     app = AbsensiApp(root)
-    root.mainloop()

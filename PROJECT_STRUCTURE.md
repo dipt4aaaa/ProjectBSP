@@ -11,7 +11,7 @@ Sistem absensi berbasis face recognition dengan arsitektur terpisah:
 ## 📂 Struktur File
 
 ```
-Absen_BSP/
+Project_BSP/
 ├── 🖥️ desktop_app/              # Aplikasi Desktop Tkinter
 │   ├── main.py                   # Aplikasi utama (MODIFIED)
 │   ├── requirements.txt          # Dependencies Python
@@ -76,7 +76,6 @@ Absen_BSP/
 | ---------------- | ------------------------- | ---------------------------- |
 | Desktop App      | Python + Tkinter          | UI aplikasi desktop          |
 | Face Recognition | face_recognition + OpenCV | Deteksi dan pengenalan wajah |
-| AI Enhancement   | GFPGAN                    | Peningkatan kualitas foto    |
 | Web Backend      | Flask                     | REST API dan web server      |
 | Database         | PostgreSQL + SQLite       | Penyimpanan data             |
 | Frontend         | Bootstrap + Chart.js      | Interface web responsive     |
@@ -84,11 +83,6 @@ Absen_BSP/
 
 ## 🚀 Quick Start
 
-### Instalasi Otomatis
-
-```bash
-install.bat
-```
 
 ### Manual Setup
 

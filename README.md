@@ -10,7 +10,7 @@ Sistem absensi berbasis pengenalan wajah dengan arsitektur terpisah antara aplik
 ├── docker/              # Docker configuration
 ├── data_wajah/          # Penyimpanan foto dan encoding wajah
 ├── log_absensi/         # Log foto absensi
-└── GFPGAN/              # AI enhancement untuk foto
+
 ```
 
 ## ✨ Fitur
@@ -19,7 +19,6 @@ Sistem absensi berbasis pengenalan wajah dengan arsitektur terpisah antara aplik
 
 - ✅ Pendaftaran karyawan dengan data lengkap (nama, departemen, posisi)
 - ✅ Absensi real-time menggunakan kamera
-- ✅ Face recognition dengan GFPGAN enhancement
 - ✅ Koneksi ke database PostgreSQL/SQLite
 
 ### Dashboard Web HR (Flask)
