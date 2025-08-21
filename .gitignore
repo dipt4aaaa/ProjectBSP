@@ -1,34 +1,19 @@
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-pip-wheel-metadata/
-share/python-wheels/
 *.egg-info/
-.installed.cfg
 *.egg
+*.log
 
 # Virtual Environment
 venv/
 env/
 ENV/
 env39/
+.env
+.env.*
 
-# IDE
+# IDE/editor
 .vscode/
 .idea/
 *.swp
@@ -38,68 +23,61 @@ env39/
 .DS_Store
 Thumbs.db
 
-# Database
+# Database & Data
 *.db
-*.sqlite
-*.sqlite3
+*.sqlite*
 absensi_backup.db
-
-# Environment Variables
-.env
-.env.local
-.env.production
+desktop_app/data_wajah/
+desktop_app/log_absensi/
 
 # Logs
-*.log
 logs/
 dashboard_web/logs/
 
-# Docker
-.docker/
-
-# Face Recognition Data (optional - uncomment if you don't want to commit faces)
-# data_wajah/*.jpg
-# data_wajah/*.json
-# log_absensi/*.jpg
-
-# GFPGAN Models (large files)
-GFPGAN/experiments/pretrained_models/*.pth
-GFPGAN/weights/*.pth
-gfpgan
-
-# Temporary files
-*.tmp
-*.temp
-temp/
-
-# Flask
-instance/
-.webassets-cache
-
-# Coverage reports
-htmlcov/
-.coverage
-.coverage.*
-coverage.xml
+# Jupyter Notebook
+.ipynb_checkpoints
 
 # PyTest
 .pytest_cache/
 
 # mypy
 .mypy_cache/
-.dmypy.json
-dmypy.json
 
-# Jupyter Notebook
-.ipynb_checkpoints
+# Coverage
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
 
-# pgAdmin
+# Flutter/Dart
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+pubspec.lock
+
+# Flutter iOS/Android
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Pods/
+ios/.symlinks/
+ios/Runner.xcworkspace/
+android/.gradle/
+android/app/build/
+android/.idea/
+android/local.properties
+
+# Misc
+temp/
+*.tmp
+*.temp
+
+# Docker
+.docker/
+postgres_data/
 pgadmin_data/
 
-# Docker volumes
-postgres_data/
-
-# Ignore folder data wajah dan log absensi
-desktop_app/data_wajah/
-desktop_app/log_absensi/
-
+# Flask
+instance/
+.webassets-cache
