@@ -282,15 +282,18 @@
 
     // Get time status for styling
     function getTimeStatus(timeString) {
-        const time = timeString.substring(0, 5);
-        const hour = parseInt(time.split(':')[0]);
+        // timeString format: "HH:MM:SS" atau "HH:MM"
+        const [hour, minute] = timeString.split(':').map(Number);
+        const totalMinutes = hour * 60 + minute;
 
-        if (hour <= 8) {
+        if (totalMinutes < 450) { // sebelum 07:30
             return { class: 'bg-success', text: 'Tepat Waktu' };
-        } else if (hour <= 9) {
+        } else if (totalMinutes < 465) { // 07:30 s/d 07:44
             return { class: 'bg-warning', text: 'Agak Terlambat' };
-        } else {
+        } else if (totalMinutes < 990) { // 07:45 s/d 16:29 
             return { class: 'bg-danger', text: 'Terlambat' };
+        } else { // 16:30 ke atas
+            return { class: 'bg-success', text: 'Absen Pulang' };
         }
     }
 
