@@ -2,7 +2,8 @@
 
 Sistem presensi berbasis **pengenalan wajah** dengan arsitektur **multi-platform**:
 
-* **Aplikasi Desktop (Tkinter)** untuk registrasi & presensi.
+* **Aplikasi Desktop (Tkinter)** untuk registrasi & presensi yang dipegang admin.
+* **Aplikasi Mobile (Flutter)** untuk presensi mandiri karyawan.
 * **Dashboard Web (Flask)** untuk HR monitoring.
 * **API Server (Flask)** untuk integrasi Flutter mobile app.
 * **Clean Architecture** dengan **Service Layer** terpisah.
