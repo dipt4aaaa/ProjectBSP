@@ -1,197 +1,261 @@
-# Sistem Absensi Face Recognition
+# 📌 Sistem Presensi Face Recognition BSP
 
-Sistem absensi berbasis pengenalan wajah dengan arsitektur terpisah antara aplikasi desktop dan dashboard web HR.
+Sistem presensi berbasis **pengenalan wajah** dengan arsitektur **multi-platform**:
+
+* **Aplikasi Desktop (Tkinter)** untuk registrasi & presensi.
+* **Dashboard Web (Flask)** untuk HR monitoring.
+* **API Server (Flask)** untuk integrasi Flutter mobile app.
+* **Clean Architecture** dengan **Service Layer** terpisah.
+
+---
 
 ## 🏗️ Arsitektur Sistem
 
 ```
 Project_BSP/
-├── 🖥️ desktop_app/              # Aplikasi Desktop Tkinter
-│   ├── main.py                   # Aplikasi utama (MODIFIED)
-│   ├── requirements.txt          # Dependencies Python
-│   └── desktop_database.py       # Database configuration khusus untuk desktop app
+├── 🖥️ desktop_app/              # Aplikasi Desktop + Service Layer + API
+│   ├── main.py                   # Legacy Tkinter App
+│   ├── main_refactored.py         # Refactored Tkinter App (pakai service layer)
+│   ├── face_recognition_service.py # Core business logic
+│   ├── api_server.py              # Flask API untuk Flutter
+│   ├── desktop_database_config.py # Database config
+│   ├── launcher.py                # Jalankan kombinasi (app/api)
+│   ├── requirements.txt           # Dependencies desktop
+│   └── API_DOCUMENTATION.md       # Dokumentasi API
 │
 ├── 🌐 dashboard_web/             # Web Dashboard HR
-│   ├── app.py                    # Flask application
-│   ├── requirements.txt          # Dependencies web
-│   ├── .env.example             # Template environment
-│   └── templates/               # HTML Templates
-│       ├── base.html            # Template dasar
-│       ├── dashboard.html       # Halaman dashboard
-│       ├── log_absensi.html     # Halaman log absensi
-│       └── statistik.html       # Halaman statistik
+│   ├── app.py                     # Flask application
+│   ├── requirements.txt           # Dependencies web
+│   ├── .env.example               # Template environment
+│   └── templates/                 # HTML Templates
+│       ├── base.html
+│       ├── dashboard.html
+│       ├── log_presensi.html
+│       └── statistik.html
 │
 ├── 🐳 docker/                    # Docker Configuration
-│   ├── docker-compose.yml       # Orchestrasi services
-│   ├── Dockerfile.web          # Container web dashboard
-│   ├── init.sql                # Schema database
-│   └── pgadmin_servers.json    # Konfigurasi pgAdmin
+│   ├── docker-compose.yml
+│   ├── Dockerfile.web
+│   ├── init.sql                   # Schema database
+│   └── pgadmin_servers.json
 │
-└── 📚 README.md                 # Dokumentasi lengkap
-
+└── 📚 README.md                   # Dokumentasi (file ini)
 ```
+
+---
 
 ## ✨ Fitur
 
 ### Aplikasi Desktop (Tkinter)
 
-- ✅ Pendaftaran karyawan dengan data lengkap (nama, departemen, posisi)
-- ✅ Absensi real-time menggunakan kamera
-- ✅ Koneksi ke database PostgreSQL/SQLite
+* ✅ Pendaftaran karyawan dengan data lengkap
+* ✅ Presensi real-time menggunakan kamera
+* ✅ Koneksi ke database PostgreSQL
+* ✅ Refactor dengan service layer (lebih bersih & reusable)
 
 ### Dashboard Web HR (Flask)
 
-- ✅ Dashboard overview dengan statistik
-- ✅ Log absensi dengan filter dan pencarian
-- ✅ Visualisasi data (grafik pie, bar, line chart)
-- ✅ Statistik kehadiran per departemen dan karyawan
-- ✅ Export data (coming soon)
+* ✅ Dashboard overview dengan statistik
+* ✅ Log presensi dengan filter & pencarian
+* ✅ Visualisasi data (grafik pie, bar, line)
+* ✅ Statistik kehadiran per departemen & karyawan
+* ✅ Export data (coming soon)
 
-## 🚀 Instalasi dan Setup
+### API Server (Flask, untuk Flutter)
+
+* ✅ Registrasi wajah via HTTP API
+* ✅ Presensi via mobile (kirim foto base64)
+* ✅ Ambil daftar karyawan & log presensi
+* ✅ Flutter mobile app bisa integrasi dengan mudah
+
+---
+
+## 🚀 Instalasi & Setup
 
 ### 1. Clone Repository
 
 ```bash
 git clone <repository-url>
-cd Absen_BSP
+cd Project_BSP
 ```
 
-### 2. Setup Docker (Dashboard Web + Database)
+### 2. Setup Docker (Database + Dashboard)
 
 ```bash
 cd docker
 docker-compose up -d
 ```
 
-Services yang akan berjalan:
+Services:
 
-- **PostgreSQL**: `localhost:5432`
-- **Web Dashboard**: `http://localhost:5000`
-- **pgAdmin**: `http://localhost:8080` (optional)
+* PostgreSQL → `localhost:5432`
+* Web Dashboard → `http://localhost:5000`
+* pgAdmin (optional) → `http://localhost:8080`
 
-### 3. Setup Aplikasi Desktop
+### 3. Setup Desktop App
 
 ```bash
 cd desktop_app
 pip install -r requirements.txt
-python main.py
+python main_refactored.py   # versi refactored
 ```
+
+### 4. Setup API Server (untuk Flutter)
+
+```bash
+cd desktop_app
+python api_server.py
+```
+
+API berjalan di: `http://localhost:5050/api`
+
+---
 
 ## 🗄️ Database Schema
 
 ### Tabel `karyawan`
 
-| Field              | Type         | Description              |
-| ------------------ | ------------ | ------------------------ |
-| id                 | SERIAL       | Primary key              |
-| nama               | VARCHAR(100) | Nama karyawan            |
-| departemen         | VARCHAR(100) | Departemen               |
-| posisi             | VARCHAR(100) | Posisi/jabatan           |
-| face_encoding_path | TEXT         | Path file encoding wajah |
-| created_at         | TIMESTAMP    | Waktu pendaftaran        |
+| Field                | Type         | Description              |
+| -------------------- | ------------ | ------------------------ |
+| id                   | SERIAL       | Primary key              |
+| nama                 | VARCHAR(100) | Nama karyawan            |
+| departemen           | VARCHAR(100) | Departemen               |
+| posisi               | VARCHAR(100) | Posisi/jabatan           |
+| face\_encoding\_path | TEXT         | Path file encoding wajah |
+| created\_at          | TIMESTAMP    | Waktu pendaftaran        |
 
-### Tabel `log_absensi`
+### Tabel `log_presensi`
 
-| Field       | Type         | Description         |
-| ----------- | ------------ | ------------------- |
-| id          | SERIAL       | Primary key         |
-| nama        | VARCHAR(100) | Nama karyawan       |
-| departemen  | VARCHAR(100) | Departemen          |
-| posisi      | VARCHAR(100) | Posisi              |
-| tanggal     | DATE         | Tanggal absensi     |
-| jam         | TIME         | Jam absensi         |
-| path_gambar | TEXT         | Path foto absensi   |
-| created_at  | TIMESTAMP    | Waktu record dibuat |
+| Field        | Type         | Description         |
+| ------------ | ------------ | ------------------- |
+| id           | SERIAL       | Primary key         |
+| nama         | VARCHAR(100) | Nama karyawan       |
+| departemen   | VARCHAR(100) | Departemen          |
+| posisi       | VARCHAR(100) | Posisi              |
+| tanggal      | DATE         | Tanggal presensi    |
+| jam          | TIME         | Jam presensi        |
+| path\_gambar | TEXT         | Path foto presensi  |
+| created\_at  | TIMESTAMP    | Waktu record dibuat |
+
+---
+
+## 📊 API Endpoints
+
+Base URL: `http://localhost:5050/api`
+
+* `POST /register` – Registrasi karyawan baru
+* `POST /presensi` – Rekam presensi (foto base64)
+* `GET /employees` – List karyawan
+* `GET /attendance-logs` – Riwayat presensi
+* `POST /reload-faces` – Reload encoding wajah
+* `GET /health` – Health check
+
+📄 Detail: lihat `desktop_app/API_DOCUMENTATION.md`
+
+---
 
 ## 🔧 Konfigurasi
 
-### Environment Variables (Dashboard Web)
+### Dashboard Web
+
+`.env`
 
 ```env
 DB_HOST=localhost
-DB_NAME=absensi_db
+DB_NAME=presensi_db
 DB_USER=postgres
 DB_PASSWORD=postgres
 DB_PORT=5432
 ```
 
-### Database Connection Fallback
-
-Aplikasi akan otomatis fallback ke SQLite jika PostgreSQL tidak tersedia.
-
-## 📊 API Endpoints
-
-### Dashboard API
-
-- `GET /api/dashboard-summary` - Ringkasan data dashboard
-- `GET /api/log-absensi` - Data log absensi dengan filter
-- `GET /api/departemen` - List departemen
-- `GET /api/karyawan` - List karyawan
-- `GET /api/statistik/kehadiran-bulanan` - Statistik bulanan
-- `GET /api/statistik/departemen` - Statistik per departemen
-- `GET /api/statistik/karyawan-ranking` - Ranking kehadiran karyawan
-
-## 🔍 Troubleshooting
-
-### Desktop App Issues
-
-1. **Camera tidak terdeteksi**: Pastikan kamera terhubung dan driver terinstall
-2. **Face recognition error**: Install Visual C++ Redistributable
-3. **Database connection error**: Pastikan PostgreSQL berjalan di port 5432
-
-### Web Dashboard Issues
-
-1. **Database connection failed**: Cek docker container PostgreSQL
-2. **Charts tidak muncul**: Pastikan Chart.js terload
-3. **Images tidak tampil**: Cek path folder log_absensi
-
-### Docker Issues
-
-```bash
-# Restart services
-docker-compose down
-docker-compose up -d
-
-# Check logs
-docker-compose logs web_dashboard
-docker-compose logs postgres
-```
+---
 
 ## 🎯 Usage Flow
 
-1. **Setup**: Jalankan docker-compose untuk database dan web dashboard
-2. **Registrasi**: Gunakan aplikasi desktop untuk mendaftarkan karyawan
-3. **Absensi**: Karyawan melakukan absensi via aplikasi desktop
-4. **Monitoring**: HR mengakses dashboard web untuk melihat laporan
-
-## 🔄 Development
-
-### Adding New Features
-
-1. **Desktop App**: Modifikasi `desktop_app/main.py`
-2. **Web Dashboard**:
-   - Backend: `dashboard_web/app.py`
-   - Frontend: `dashboard_web/templates/`
-3. **Database**: Update `docker/init.sql`
-
-### Testing
-
-```bash
-# Test desktop app
-cd desktop_app
-python main.py
-
-# Test web dashboard
-cd dashboard_web
-python app.py
-```
-
-
-
-## 📞 Support
-
-Untuk pertanyaan dan support, silakan buat issue di repository ini.
+1. Jalankan `docker-compose` untuk DB & dashboard
+2. Registrasi karyawan via desktop app
+3. Presensi via desktop atau Flutter (API)
+4. Monitoring via dashboard web
 
 ---
 
-**© 2025 Sistem Absensi Face Recognition**
+## 📱 Flutter Integration
+
+1. Pastikan device & PC 1 jaringan WiFi
+2. Dapatkan IP PC (`ipconfig` di Windows)
+3. Contoh Flutter request:
+
+```dart
+class FaceRecognitionAPI {
+  static const String baseUrl = 'http://192.168.1.100:5050/api';
+  
+  static Future<Map<String, dynamic>> recordPresensi(String base64Image) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/presensi'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'image': base64Image}),
+    );
+    return json.decode(response.body);
+  }
+}
+```
+
+---
+
+## 🔍 Troubleshooting
+
+### Desktop App
+
+* Kamera tidak terdeteksi → cek driver & index kamera
+* Face recognition error → install **Visual C++ Redistributable**
+* DB error → cek PostgreSQL berjalan
+
+### Web Dashboard
+
+* DB connection failed → cek docker container
+* Charts tidak muncul → cek Chart.js load
+* Gambar tidak tampil → cek path `log_presensi`
+
+### API/Flutter
+
+* API tidak bisa diakses → cek firewall & IP PC
+* Face tidak dikenali → pastikan pencahayaan bagus
+
+---
+
+## 🔄 Development Workflow
+
+### Desktop
+
+* Kembangkan di `main.py`
+* UI terpisah dari logic
+
+### API / Flutter
+
+* Jalankan `api_server.py`
+* Tes API dengan Postman
+* Implementasikan ke Flutter
+
+---
+
+## 🚧 Next Steps
+
+* 🔒 Tambah autentikasi (JWT)
+* ⚡ Optimasi kecepatan face recognition
+* 📊 Tambah logging & monitoring
+* 📱 Flutter: integrasi kamera & offline mode
+* 🐳 Deployment dengan Docker + Nginx
+
+---
+
+## 📞 Support
+
+Buat issue di repository ini untuk pertanyaan atau bug report.
+
+---
+
+**© 2025 Sistem Presensi Face Recognition BSP**
+
+---
+
+Mau sekalian aku bikinin **script migrasi** kecil (`init.sql`) biar tabel `log_absensi` → `log_presensi` juga otomatis berubah, atau cukup di dokumentasi aja dulu?
