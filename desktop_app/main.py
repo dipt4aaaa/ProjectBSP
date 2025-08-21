@@ -1,17 +1,19 @@
+"""
+Refactored Tkinter Application - menggunakan FaceRecognitionService
+Aplikasi Tkinter tetap berjalan seperti biasa, tapi sekarang menggunakan service layer
+"""
 import cv2
 import os
 import sys
 from PIL import Image, ImageTk
-import face_recognition
 import datetime
 import tkinter as tk
 from tkinter import messagebox
 import tkinter.ttk as ttk
 import tkinter.simpledialog as simpledialog
-import json
 
-# Import database config lokal
-from desktop_database_config import DesktopDatabaseConfig
+# Import service layer baru
+from face_recognition_service import FaceRecognitionService
 
 class AbsensiApp:
     def __init__(self, root):
@@ -19,14 +21,13 @@ class AbsensiApp:
         self.root.title("Sistem Absensi Face Recognition")
         self.root.geometry("900x700")
 
-        # Inisialisasi direktori
-        self.data_dir = "data_wajah"
-        self.log_dir = "log_absensi"
-        os.makedirs(self.data_dir, exist_ok=True)
-        os.makedirs(self.log_dir, exist_ok=True)
-
-        # Inisialisasi database
-        self.init_database()
+        # Initialize face recognition service
+        try:
+            self.face_service = FaceRecognitionService()
+            print("✅ Face Recognition Service initialized")
+        except Exception as e:
+            messagebox.showerror("Service Error", f"Tidak dapat menginisialisasi service: {e}")
+            sys.exit(1)
 
         # Setup kamera
         self.cap = cv2.VideoCapture(0)
@@ -38,24 +39,8 @@ class AbsensiApp:
         # Tombol-tombol kontrol
         self.create_buttons()
 
-        # Face recognition setup
-        self.known_face_encodings = []
-        self.known_face_data = []  # Berisi nama, departemen, posisi
-        self.load_known_faces()
-
         # Update video
         self.update_video()
-
-    def init_database(self):
-        """Inisialisasi koneksi database menggunakan desktop config"""
-        try:
-            self.conn, self.db_type = DesktopDatabaseConfig.get_connection()
-            DesktopDatabaseConfig.init_tables(self.conn, self.db_type)
-            print(f"✅ Database initialized: {self.db_type}")
-            
-        except Exception as e:
-            messagebox.showerror("Database Error", f"Tidak dapat terhubung ke database: {e}")
-            sys.exit(1)
 
     def create_buttons(self):
         button_frame = tk.Frame(self.root)
@@ -83,180 +68,115 @@ class AbsensiApp:
         )
         absensi_button.pack(side=tk.LEFT, padx=5)
 
+        # Tombol reload faces
+        reload_button = tk.Button(
+            button_frame, 
+            text="Reload Faces", 
+            command=self.reload_faces,
+            bg="#FF9800",
+            fg="white",
+            font=("Arial", 12),
+            padx=20
+        )
+        reload_button.pack(side=tk.LEFT, padx=5)
+
         # Info panel
         info_frame = tk.Frame(self.root)
         info_frame.pack(pady=10)
         
         info_label = tk.Label(
             info_frame, 
-            text="Dashboard Web HR tersedia di: http://localhost:5000",
+            text="API Server tersedia di: http://localhost:5050\nGunakan untuk integrasi dengan Flutter Mobile App",
             font=("Arial", 10),
-            fg="blue"
+            fg="blue",
+            justify="center"
         )
         info_label.pack()
 
+        # Status panel
+        self.status_frame = tk.Frame(self.root)
+        self.status_frame.pack(pady=5)
+        
+        self.status_label = tk.Label(
+            self.status_frame, 
+            text=f"Known faces loaded: {len(self.face_service.known_face_encodings)}",
+            font=("Arial", 9),
+            fg="green"
+        )
+        self.status_label.pack()
+
     def daftar_wajah(self):
-        """Dialog pendaftaran karyawan dengan field tambahan"""
+        """Dialog pendaftaran karyawan menggunakan service"""
         dialog = EmployeeRegistrationDialog(self.root)
         if dialog.result:
             nama, departemen, posisi = dialog.result
             
             ret, frame = self.cap.read()
             if ret:
-                face_locations = face_recognition.face_locations(frame)
-                if face_locations:
-                    top, right, bottom, left = face_locations[0]
-
-                    # Perluasan bounding box
-                    margin = 20
-                    top = max(0, top - margin)
-                    right = min(frame.shape[1], right + margin)
-                    bottom = min(frame.shape[0], bottom + margin)
-                    left = max(0, left - margin)
-
-                    face_image = frame[top:bottom, left:right]
-                    
-                    # Simpan gambar wajah
-                    image_path = os.path.join(self.data_dir, f"{nama}.jpg")
-                    cv2.imwrite(image_path, face_image)
-                    
-                    # Dapatkan face encoding
-                    face_encoding = face_recognition.face_encodings(frame, face_locations)[0]
-                    
-                    # Simpan face encoding sebagai file
-                    encoding_path = os.path.join(self.data_dir, f"{nama}_encoding.json")
-                    with open(encoding_path, 'w') as f:
-                        json.dump(face_encoding.tolist(), f)
-                    
-                    # Simpan ke database
-                    try:
-                        cursor = self.conn.cursor()
-                        if self.db_type == 'postgresql':
-                            cursor.execute('''
-                                INSERT INTO karyawan (nama, departemen, posisi, face_encoding_path)
-                                VALUES (%s, %s, %s, %s)
-                            ''', (nama, departemen, posisi, encoding_path))
-                        else:
-                            cursor.execute('''
-                                INSERT INTO karyawan (nama, departemen, posisi, face_encoding_path)
-                                VALUES (?, ?, ?, ?)
-                            ''', (nama, departemen, posisi, encoding_path))
-                        
-                        self.conn.commit()
-                        messagebox.showinfo("Berhasil", f"Karyawan {nama} berhasil didaftarkan")
-                        self.load_known_faces()
-                        
-                    except Exception as e:
-                        messagebox.showerror("Database Error", f"Gagal menyimpan data: {e}")
-                        
+                # Gunakan service untuk register employee
+                result = self.face_service.register_employee(nama, departemen, posisi, frame)
+                
+                if result['status'] == 'success':
+                    messagebox.showinfo("Berhasil", result['message'])
+                    # Update status
+                    self.update_status()
                 else:
-                    messagebox.showerror("Error", "Tidak ada wajah terdeteksi")
-
-    def load_known_faces(self):
-        """Load data wajah dan encoding dari database"""
-        self.known_face_encodings = []
-        self.known_face_data = []
-        
-        try:
-            cursor = self.conn.cursor()
-            cursor.execute("SELECT nama, departemen, posisi, face_encoding_path FROM karyawan")
-            employees = cursor.fetchall()
-            
-            for employee in employees:
-                try:
-                    if len(employee) == 4:  # PostgreSQL
-                        nama, departemen, posisi, encoding_path = employee
-                    else:  # SQLite fallback
-                        nama, departemen, posisi, encoding_path = employee
-                    
-                    if encoding_path and os.path.exists(encoding_path):
-                        with open(encoding_path, 'r') as f:
-                            encoding = json.load(f)
-                        
-                        self.known_face_encodings.append(encoding)
-                        self.known_face_data.append({
-                            'nama': nama,
-                            'departemen': departemen,
-                            'posisi': posisi
-                        })
-                except Exception as e:
-                    print(f"Error loading face for {employee[0]}: {e}")
-                    
-        except Exception as e:
-            print(f"Error loading known faces: {e}")
+                    messagebox.showerror("Error", result['message'])
+            else:
+                messagebox.showerror("Error", "Tidak dapat mengambil gambar dari kamera")
 
     def lakukan_absensi(self):
+        """Lakukan absensi menggunakan service"""
         ret, frame = self.cap.read()
         if ret:
-            face_locations = face_recognition.face_locations(frame)
-            face_encodings = face_recognition.face_encodings(frame, face_locations)
+            # Gunakan service untuk absensi
+            result = self.face_service.do_absensi(frame)
+            
+            if result['status'] == 'success':
+                data = result['data']
+                messagebox.showinfo(
+                    "Absensi Berhasil", 
+                    f"Absensi untuk {data['nama']} berhasil!\n"
+                    f"Departemen: {data['departemen']}\n"
+                    f"Posisi: {data['posisi']}\n"
+                    f"Waktu: {data['tanggal']} {data['jam']}"
+                )
+            else:
+                messagebox.showerror("Absensi Gagal", result['message'])
+        else:
+            messagebox.showerror("Error", "Tidak dapat mengambil gambar dari kamera")
 
-            for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
-                matches = face_recognition.compare_faces(self.known_face_encodings, face_encoding, tolerance=0.45)
-                employee_data = None
+    def reload_faces(self):
+        """Reload known faces dari database"""
+        try:
+            success = self.face_service.load_known_faces()
+            if success:
+                self.update_status()
+                messagebox.showinfo("Berhasil", "Known faces berhasil direload")
+            else:
+                messagebox.showerror("Error", "Gagal reload known faces")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error saat reload: {str(e)}")
 
-                if True in matches:
-                    first_match_index = matches.index(True)
-                    employee_data = self.known_face_data[first_match_index]
-
-                if employee_data:
-                    tanggal = datetime.datetime.now().strftime("%Y-%m-%d")
-                    jam = datetime.datetime.now().strftime("%H:%M:%S")
-
-                    margin = 20
-                    top = max(0, top - margin)
-                    right = min(frame.shape[1], right + margin)
-                    bottom = min(frame.shape[0], bottom + margin)
-                    left = max(0, left - margin)
-
-                    face_image = frame[top:bottom, left:right]
-
-                    filename = f"{employee_data['nama']}_{tanggal}_{datetime.datetime.now().strftime('%H-%M-%S')}.jpg"
-                    local_path = os.path.join(self.log_dir, filename)  # Simpan di lokal
-                    cv2.imwrite(local_path, face_image)
-                    rel_path = f"images/{filename}"  # Simpan ke DB path relatif
-
-                    try:
-                        cursor = self.conn.cursor()
-                        if self.db_type == 'postgresql':
-                            cursor.execute('''
-                                INSERT INTO log_absensi (nama, departemen, posisi, tanggal, jam, path_gambar)
-                                VALUES (%s, %s, %s, %s, %s, %s)
-                            ''', (
-                                employee_data['nama'], 
-                                employee_data['departemen'], 
-                                employee_data['posisi'], 
-                                tanggal, 
-                                jam, 
-                                rel_path
-                            ))
-                        else:
-                            cursor.execute('''
-                                INSERT INTO log_absensi (nama, departemen, posisi, tanggal, jam, path_gambar)
-                                VALUES (?, ?, ?, ?, ?, ?)
-                            ''', (
-                                employee_data['nama'], 
-                                employee_data['departemen'], 
-                                employee_data['posisi'], 
-                                tanggal, 
-                                jam, 
-                                rel_path
-                            ))
-                        
-                        self.conn.commit()
-                        
-                    except Exception as e:
-                        print(f"Database error: {e}")
-
-                    messagebox.showinfo("Absensi", f"Absensi untuk {employee_data['nama']} berhasil")
+    def update_status(self):
+        """Update status label"""
+        self.status_label.config(
+            text=f"Known faces loaded: {len(self.face_service.known_face_encodings)}"
+        )
 
     def update_video(self):
+        """Update video display dengan face detection"""
         ret, frame = self.cap.read()
         if ret:
             # Deteksi wajah dan gambar bounding box
-            face_locations = face_recognition.face_locations(frame)
-            for (top, right, bottom, left) in face_locations:
-                cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
+            try:
+                import face_recognition
+                face_locations = face_recognition.face_locations(frame)
+                for (top, right, bottom, left) in face_locations:
+                    cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
+            except ImportError:
+                # Jika face_recognition tidak tersedia, skip face detection
+                pass
 
             frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             img = Image.fromarray(frame_rgb)
@@ -271,8 +191,6 @@ class AbsensiApp:
     def __del__(self):
         if hasattr(self, 'cap'):
             self.cap.release()
-        if hasattr(self, 'conn'):
-            self.conn.close()
 
 
 class EmployeeRegistrationDialog:
@@ -356,7 +274,20 @@ class EmployeeRegistrationDialog:
         self.dialog.destroy()
 
 
-if __name__ == "__main__":
+def main():
+    """Main function untuk menjalankan aplikasi Tkinter"""
+    print("🖥️  Starting Tkinter Desktop Application...")
+    print("📊 Database and Face Recognition Service will be initialized")
+    print("🎯 This app now uses service layer for better separation of concerns")
+    
     root = tk.Tk()
     app = AbsensiApp(root)
+    
+    print("✅ Desktop application is running")
+    print("💡 To run API server for Flutter, execute: python api_server.py")
+    
     root.mainloop()
+
+
+if __name__ == "__main__":
+    main()
