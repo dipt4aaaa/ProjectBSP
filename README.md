@@ -14,12 +14,10 @@ Sistem presensi berbasis **pengenalan wajah** dengan arsitektur **multi-platform
 ```
 Project_BSP/
 ├── 🖥️ desktop_app/              # Aplikasi Desktop + Service Layer + API
-│   ├── main.py                   # Legacy Tkinter App
-│   ├── main_refactored.py         # Refactored Tkinter App (pakai service layer)
+│   ├── main.py                   # Refactored Tkinter App (pakai service layer)
 │   ├── face_recognition_service.py # Core business logic
 │   ├── api_server.py              # Flask API untuk Flutter
 │   ├── desktop_database_config.py # Database config
-│   ├── launcher.py                # Jalankan kombinasi (app/api)
 │   ├── requirements.txt           # Dependencies desktop
 │   └── API_DOCUMENTATION.md       # Dokumentasi API
 │
