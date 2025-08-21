@@ -95,7 +95,7 @@ Services:
 ```bash
 cd desktop_app
 pip install -r requirements.txt
-python main_refactored.py   # versi refactored
+python main.py  
 ```
 
 ### 4. Setup API Server (untuk Flutter)
