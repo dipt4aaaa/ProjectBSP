@@ -1,10 +1,11 @@
-# 📁 STRUKTUR PROJECT SISTEM ABSENSI
+# 📁 STRUKTUR PROJECT SISTEM presensi
 
 ## 🎯 Overview
 
-Sistem absensi berbasis face recognition dengan arsitektur terpisah:
+Sistem presensi berbasis face recognition dengan arsitektur terpisah:
 
-- **Desktop App** (Tkinter) - Pendaftaran dan absensi
+- **Desktop App** (Tkinter) - Pendaftaran dan presensi untuk admin presensi
+- **Mobile App** (Flutter) -  presensi untuk karyawan
 - **Web Dashboard** (Flask) - Monitoring dan laporan HR
 - **Database** (PostgreSQL) - Penyimpanan data
 
@@ -24,7 +25,7 @@ Project_BSP/
 │   └── templates/               # HTML Templates
 │       ├── base.html            # Template dasar
 │       ├── dashboard.html       # Halaman dashboard
-│       ├── log_absensi.html     # Halaman log absensi
+│       ├── log_presensi.html     # Halaman log presensi
 │       └── statistik.html       # Halaman statistik
 │
 ├── 🐳 docker/                    # Docker Configuration
@@ -50,7 +51,7 @@ Project_BSP/
 ### Web Dashboard (NEW)
 
 - ✅ **Dashboard overview** dengan statistik real-time
-- ✅ **Log absensi** dengan filter dan pencarian
+- ✅ **Log presensi** dengan filter dan pencarian
 - ✅ **Visualisasi data** menggunakan Chart.js
 - ✅ **Statistik kehadiran** per departemen dan karyawan
 - ✅ **API REST** untuk semua data
@@ -59,7 +60,7 @@ Project_BSP/
 ### Database Schema (IMPROVED)
 
 - ✅ **Tabel karyawan** dengan field departemen dan posisi
-- ✅ **Tabel log_absensi** dengan data lengkap
+- ✅ **Tabel log_presensi** dengan data lengkap
 - ✅ **PostgreSQL** sebagai database utama
 - ✅ **Indexing** untuk performa optimal
 
@@ -69,7 +70,7 @@ Project_BSP/
 - ✅ **Web dashboard container** dengan auto-restart
 - ✅ **pgAdmin container** untuk database management
 - ✅ **Docker network** untuk komunikasi antar service
-- ✅ **Volume mounting** untuk foto absensi
+- ✅ **Volume mounting** untuk foto presensi
 
 ## 🔧 Technology Stack
 
@@ -111,19 +112,31 @@ python main.py
 | Endpoint                           | Method | Description                    |
 | ---------------------------------- | ------ | ------------------------------ |
 | `/api/dashboard-summary`           | GET    | Ringkasan statistik dashboard  |
-| `/api/log-absensi`                 | GET    | Data log absensi dengan filter |
+| `/api/log-presensi`                 | GET    | Data log presensi dengan filter |
 | `/api/departemen`                  | GET    | List semua departemen          |
 | `/api/karyawan`                    | GET    | List semua karyawan            |
 | `/api/statistik/kehadiran-bulanan` | GET    | Statistik kehadiran bulanan    |
 | `/api/statistik/departemen`        | GET    | Statistik per departemen       |
 | `/api/statistik/karyawan-ranking`  | GET    | Ranking kehadiran karyawan     |
 
+Base URL: `http://localhost:5050/api`
+
+### API Flutter
+* `POST /register` – Registrasi karyawan baru
+* `POST /presensi` – Rekam presensi (foto base64)
+* `GET /employees` – List karyawan
+* `GET /attendance-logs` – Riwayat presensi
+* `POST /reload-faces` – Reload encoding wajah
+* `GET /health` – Health check
+
+📄 Detail: lihat `desktop_app/API_DOCUMENTATION.md`
+
 ## 🔐 Database Access
 
 ### PostgreSQL (Production)
 
 - **Host**: localhost:5432
-- **Database**: absensi_db
+- **Database**: presensi_db
 - **User**: postgres
 - **Password**: postgres
 
@@ -133,7 +146,7 @@ python main.py
 
 1. **Setup**: Jalankan `install.bat` atau setup manual
 2. **Register**: Gunakan desktop app untuk mendaftar karyawan baru
-3. **Absensi**: Karyawan melakukan absensi via desktop app
+3. **Presensi**: Karyawan melakukan presensi via desktop app
 4. **Monitor**: HR mengakses web dashboard untuk laporan
 5. **Analyze**: Gunakan statistik untuk analisis kehadiran
 
