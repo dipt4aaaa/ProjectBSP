@@ -6,7 +6,7 @@ Sistem absensi berbasis face recognition dengan arsitektur terpisah:
 
 - **Desktop App** (Tkinter) - Pendaftaran dan absensi
 - **Web Dashboard** (Flask) - Monitoring dan laporan HR
-- **Database** (PostgreSQL/SQLite) - Penyimpanan data
+- **Database** (PostgreSQL) - Penyimpanan data
 
 ## 📂 Struktur File
 
@@ -33,6 +33,8 @@ Project_BSP/
 │   ├── init.sql                # Schema database
 │   └── pgadmin_servers.json    # Konfigurasi pgAdmin
 │
+│
+├── 📱 mobile_app/               # Development Flutter
 └── 📚 README.md                 # Dokumentasi lengkap
 ```
 
@@ -41,7 +43,7 @@ Project_BSP/
 ### Desktop App (MODIFIED)
 
 - ✅ **Field tambahan** saat registrasi: Departemen, Posisi
-- ✅ **Database PostgreSQL** dengan fallback SQLite
+- ✅ **Database PostgreSQL** 
 - ✅ **Dialog pendaftaran** yang lebih user-friendly
 - ✅ **Koneksi shared** menggunakan database_config
 
@@ -59,7 +61,6 @@ Project_BSP/
 - ✅ **Tabel karyawan** dengan field departemen dan posisi
 - ✅ **Tabel log_absensi** dengan data lengkap
 - ✅ **PostgreSQL** sebagai database utama
-- ✅ **SQLite fallback** untuk kompatibilitas
 - ✅ **Indexing** untuk performa optimal
 
 ### Docker Infrastructure (NEW)
@@ -77,7 +78,7 @@ Project_BSP/
 | Desktop App      | Python + Tkinter          | UI aplikasi desktop          |
 | Face Recognition | face_recognition + OpenCV | Deteksi dan pengenalan wajah |
 | Web Backend      | Flask                     | REST API dan web server      |
-| Database         | PostgreSQL + SQLite       | Penyimpanan data             |
+| Database         | PostgreSQL                | Penyimpanan data             |
 | Frontend         | Bootstrap + Chart.js      | Interface web responsive     |
 | Containerization | Docker + Docker Compose   | Deployment dan orchestration |
 
@@ -126,10 +127,7 @@ python main.py
 - **User**: postgres
 - **Password**: postgres
 
-### SQLite (Fallback)
 
-- **File**: absensi.db
-- **Auto-created** jika PostgreSQL tidak tersedia
 
 ## 🎯 Usage Flow
 
@@ -139,20 +137,11 @@ python main.py
 4. **Monitor**: HR mengakses web dashboard untuk laporan
 5. **Analyze**: Gunakan statistik untuk analisis kehadiran
 
-## 🔄 Migration
-
-Data lama akan otomatis dimigrasikan dari schema SQLite ke PostgreSQL:
-
-```bash
-cd shared
-python migrate.py
-```
 
 ## 📈 Features Comparison
 
 | Feature       | Before      | After                        |
 | ------------- | ----------- | ---------------------------- |
-| Database      | SQLite only | PostgreSQL + SQLite fallback |
 | Registration  | Nama saja   | Nama + Departemen + Posisi   |
 | Monitoring    | Desktop app | Web dashboard terpisah       |
 | Visualization | Tidak ada   | Charts dan statistik         |
@@ -177,5 +166,3 @@ python migrate.py
 - Professional HR dashboard look
 
 ---
-
-**🎉 Sistem siap digunakan dengan arsitektur yang scalable dan maintainable!**

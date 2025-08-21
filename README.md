@@ -14,31 +14,30 @@ Sistem presensi berbasis **pengenalan wajah** dengan arsitektur **multi-platform
 
 ```
 Project_BSP/
-├── 🖥️ desktop_app/              # Aplikasi Desktop + Service Layer + API
-│   ├── main.py                   # Refactored Tkinter App (pakai service layer)
-│   ├── face_recognition_service.py # Core business logic
-│   ├── api_server.py              # Flask API untuk Flutter
-│   ├── desktop_database_config.py # Database config
-│   ├── requirements.txt           # Dependencies desktop
-│   └── API_DOCUMENTATION.md       # Dokumentasi API
+├── 🖥️ desktop_app/              # Aplikasi Desktop Tkinter
+│   ├── main.py                   # Aplikasi utama (MODIFIED)
+│   ├── requirements.txt          # Dependencies Python
+│   └── desktop_database.py       # Database configuration khusus untuk desktop app
 │
 ├── 🌐 dashboard_web/             # Web Dashboard HR
-│   ├── app.py                     # Flask application
-│   ├── requirements.txt           # Dependencies web
-│   ├── .env.example               # Template environment
-│   └── templates/                 # HTML Templates
-│       ├── base.html
-│       ├── dashboard.html
-│       ├── log_presensi.html
-│       └── statistik.html
+│   ├── app.py                    # Flask application
+│   ├── requirements.txt          # Dependencies web
+│   ├── .env.example             # Template environment
+│   └── templates/               # HTML Templates
+│       ├── base.html            # Template dasar
+│       ├── dashboard.html       # Halaman dashboard
+│       ├── log_absensi.html     # Halaman log absensi
+│       └── statistik.html       # Halaman statistik
 │
 ├── 🐳 docker/                    # Docker Configuration
-│   ├── docker-compose.yml
-│   ├── Dockerfile.web
-│   ├── init.sql                   # Schema database
-│   └── pgadmin_servers.json
+│   ├── docker-compose.yml       # Orchestrasi services
+│   ├── Dockerfile.web          # Container web dashboard
+│   ├── init.sql                # Schema database
+│   └── pgadmin_servers.json    # Konfigurasi pgAdmin
 │
-└── 📚 README.md                   # Dokumentasi (file ini)
+│
+├── 📱 mobile_app/               # Development Flutter
+└── 📚 README.md                 # Dokumentasi lengkap
 ```
 
 ---

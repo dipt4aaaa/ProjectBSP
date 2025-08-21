@@ -135,8 +135,9 @@ class _AttendancePageState extends State<AttendancePage> {
         Uri.parse(apiUrl),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"image": base64Image}),
-      );
-
+      )
+      .timeout(const Duration(seconds: 20));
+      
       setState(() => _isLoading = false);
 
       if (res.statusCode == 200) {
@@ -162,7 +163,8 @@ class _AttendancePageState extends State<AttendancePage> {
       }
     } catch (e) {
       setState(() => _isLoading = false);
-      _showStatus("Error: $e", Colors.red);
+      _showStatus("Tidak dapat terhubung ke server. Pastikan koneksi internet dan alamat server benar."
+      , Colors.red);
     }
   }
 
