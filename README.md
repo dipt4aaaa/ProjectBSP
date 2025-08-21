@@ -151,6 +151,16 @@ Base URL: `http://localhost:5050/api`
 
 📄 Detail: lihat `desktop_app/API_DOCUMENTATION.md`
 
+### Dashboard API
+
+- `GET /api/dashboard-summary` - Ringkasan data dashboard
+- `GET /api/log-absensi` - Data log absensi dengan filter
+- `GET /api/departemen` - List departemen
+- `GET /api/karyawan` - List karyawan
+- `GET /api/statistik/kehadiran-bulanan` - Statistik bulanan
+- `GET /api/statistik/departemen` - Statistik per departemen
+- `GET /api/statistik/karyawan-ranking` - Ranking kehadiran karyawan
+
 ---
 
 ## 🔧 Konfigurasi
