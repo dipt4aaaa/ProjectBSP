@@ -257,5 +257,3 @@ Buat issue di repository ini untuk pertanyaan atau bug report.
 **© 2025 Sistem Presensi Face Recognition BSP**
 
 ---
-
-Mau sekalian aku bikinin **script migrasi** kecil (`init.sql`) biar tabel `log_absensi` → `log_presensi` juga otomatis berubah, atau cukup di dokumentasi aja dulu?
