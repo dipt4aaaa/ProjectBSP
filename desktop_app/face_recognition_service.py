@@ -113,7 +113,7 @@ class FaceRecognitionService:
         except Exception as e:
             return {"status": "error", "message": f"Registration failed: {str(e)}"}
     
-    def do_absensi(self, image_data) -> Dict:
+    def do_absensi(self, image_data, username=None) -> Dict:
         """
         Lakukan absensi berdasarkan gambar wajah
         
@@ -124,84 +124,85 @@ class FaceRecognitionService:
             Dict dengan hasil absensi
         """
         try:
-            # Convert image data ke numpy array jika diperlukan
-            if isinstance(image_data, str):
-                frame = cv2.imread(image_data)
-            elif isinstance(image_data, np.ndarray):
-                frame = image_data
-            else:
-                return {"status": "error", "message": "Invalid image format"}
-            
-            if frame is None:
-                return {"status": "error", "message": "Cannot read image"}
-            
-            # Deteksi wajah
-            face_locations = face_recognition.face_locations(frame)
+            # Ambil encoding wajah user ini saja
+            cursor = self.conn.cursor()
+            cursor.execute("SELECT face_encoding_path, nama, departemen, posisi FROM karyawan WHERE username = %s", (username,))
+            user = cursor.fetchone()
+            if not user:
+                return {'status': 'error', 'message': 'User not found'}
+
+            encoding_path, nama, departemen, posisi = user
+            # Load encoding dari file
+            with open(encoding_path, 'r') as f:
+                encoding = np.array(json.load(f))
+
+            # Deteksi wajah pada image_data
+            face_locations = face_recognition.face_locations(image_data)
             if not face_locations:
-                return {"status": "error", "message": "No face detected in image"}
+                return {'status': 'error', 'message': 'No face detected'}
+
+            face_encodings = face_recognition.face_encodings(image_data, face_locations)
+            if not face_encodings:
+                return {'status': 'error', 'message': 'Face encoding failed'}
+
+            # Ambil lokasi wajah pertama
+            top, right, bottom, left = face_locations[0]
+            # Sekarang variabel top, right, bottom, left sudah terdefinisi
+            # crop_face = image_data[top:bottom, left:right]  # jika ingin crop
+
+            # Bandingkan hanya dengan encoding user ini
+            match = face_recognition.compare_faces([encoding], face_encodings[0])[0]
+            if not match:
+                return {'status': 'error', 'message': 'Wajah tidak cocok dengan akun ini'}
+
+            # Generate timestamp
+            now = datetime.datetime.now()
+            tanggal = now.strftime("%Y-%m-%d")
+            jam = now.strftime("%H:%M:%S")
             
-            face_encodings = face_recognition.face_encodings(frame, face_locations)
+            # Simpan gambar absensi
+            margin = 20
+            height, width = image_data.shape[:2]
+            top = max(0, top - margin)
+            right = min(width, right + margin)
+            bottom = min(height, bottom + margin)
+            left = max(0, left - margin)
             
-            for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
-                # Compare dengan wajah yang dikenal
-                matches = face_recognition.compare_faces(self.known_face_encodings, face_encoding, tolerance=0.45)
-                employee_data = None
-                
-                if True in matches:
-                    first_match_index = matches.index(True)
-                    employee_data = self.known_face_data[first_match_index]
-                
-                if employee_data:
-                    # Generate timestamp
-                    now = datetime.datetime.now()
-                    tanggal = now.strftime("%Y-%m-%d")
-                    jam = now.strftime("%H:%M:%S")
-                    
-                    # Simpan gambar absensi
-                    margin = 20
-                    height, width = frame.shape[:2]
-                    top = max(0, top - margin)
-                    right = min(width, right + margin)
-                    bottom = min(height, bottom + margin)
-                    left = max(0, left - margin)
-                    
-                    face_image = frame[top:bottom, left:right]
-                    
-                    filename = f"{employee_data['nama']}_{tanggal}_{now.strftime('%H-%M-%S')}.jpg"
-                    local_path = os.path.join(self.log_dir, filename)
-                    cv2.imwrite(local_path, face_image)
-                    rel_path = f"images/{filename}"
-                    
-                    # Simpan ke database
-                    cursor = self.conn.cursor()
-                    cursor.execute('''
-                        INSERT INTO log_absensi (nama, departemen, posisi, tanggal, jam, path_gambar)
-                        VALUES (%s, %s, %s, %s, %s, %s)
-                    ''', (
-                        employee_data['nama'], 
-                        employee_data['departemen'], 
-                        employee_data['posisi'], 
-                        tanggal, 
-                        jam, 
-                        rel_path
-                    ))
-                    
-                    self.conn.commit()
-                    
-                    return {
-                        "status": "success",
-                        "message": f"Attendance recorded for {employee_data['nama']}",
-                        "data": {
-                            "nama": employee_data['nama'],
-                            "departemen": employee_data['departemen'],
-                            "posisi": employee_data['posisi'],
-                            "tanggal": tanggal,
-                            "jam": jam,
-                            "image_path": local_path
-                        }
-                    }
+            face_image = image_data[top:bottom, left:right]
             
-            return {"status": "error", "message": "Face not recognized"}
+            filename = f"{nama}_{tanggal}_{now.strftime('%H-%M-%S')}.jpg"
+            local_path = os.path.join(self.log_dir, filename)
+            cv2.imwrite(local_path, face_image)
+            rel_path = f"images/{filename}"
+            
+            # Simpan ke database
+            cursor = self.conn.cursor()
+            cursor.execute('''
+                INSERT INTO log_absensi (nama, departemen, posisi, tanggal, jam, path_gambar)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            ''', (
+                nama, 
+                departemen, 
+                posisi, 
+                tanggal, 
+                jam, 
+                rel_path
+            ))
+            
+            self.conn.commit()
+            
+            return {
+                "status": "success",
+                "message": f"Attendance recorded for {nama}",
+                "data": {
+                    "nama": nama,
+                    "departemen": departemen,
+                    "posisi": posisi,
+                    "tanggal": tanggal,
+                    "jam": jam,
+                    "image_path": local_path
+                }
+            }
             
         except Exception as e:
             return {"status": "error", "message": f"Attendance failed: {str(e)}"}

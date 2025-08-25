@@ -10,6 +10,7 @@ from PIL import Image, ExifTags
 import io
 import os
 from face_recognition_service import FaceRecognitionService
+from werkzeug.security import check_password_hash
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS untuk Flutter
@@ -66,6 +67,57 @@ def health_check():
         'message': 'Face Recognition API is running',
         'version': '1.0.0'
     })
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    """
+    Login user (karyawan)
+    Request body:
+    {
+        "username": "string",
+        "password": "string"
+    }
+    """
+    try:
+        data = request.get_json()
+        if not data or 'username' not in data or 'password' not in data:
+            return jsonify({'status': 'error', 'message': 'Username and password required'}), 400
+
+        username = data['username']
+        password = data['password']
+
+        # Query user dari database
+        cursor = face_service.conn.cursor()
+        cursor.execute(
+            "SELECT id, nama, departemen, posisi, password_hash FROM karyawan WHERE username = %s",
+            (username,)
+        )
+        user = cursor.fetchone()
+        if not user:
+            return jsonify({'status': 'error', 'message': 'User not found'}), 401
+
+        user_id, nama, departemen, posisi, password_hash = user
+
+        # Verifikasi password
+        if not check_password_hash(password_hash, password):
+            return jsonify({'status': 'error', 'message': 'Invalid password'}), 401
+
+        # Sukses login
+        return jsonify({
+            'status': 'success',
+            'message': 'Login successful',
+            'data': {
+                'id': user_id,
+                'nama': nama,
+                'departemen': departemen,
+                'posisi': posisi,
+                'username': username
+            }
+        }), 200
+
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': f'Login failed: {str(e)}'}), 500
+    
 
 @app.route('/api/register', methods=['POST'])
 def register_employee():
@@ -132,32 +184,20 @@ def do_attendance():
     """
     try:
         data = request.get_json()
-        
-        if not data or 'image' not in data:
-            return jsonify({
-                'status': 'error', 
-                'message': 'Image is required'
-            }), 400
-        
-        # Decode image
-        try:
-            image_array = decode_base64_image(data['image'])
-        except ValueError as e:
-            return jsonify({'status': 'error', 'message': str(e)}), 400
-        
-        # Lakukan absensi
-        result = face_service.do_absensi(image_array)
-        
-        if result['status'] == 'success':
+        if not data or 'image' not in data or 'username' not in data:
+            return jsonify({'status': 'error', 'message': 'Image and username required'}), 400
+
+        username = data['username']
+        image = decode_base64_image(data['image'])
+
+        # Panggil service dengan username
+        result = face_service.do_absensi(image, username=username)
+        if result.get('status') == 'success':
             return jsonify(result), 200
         else:
             return jsonify(result), 400
-            
     except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': f'Attendance failed: {str(e)}'
-        }), 500
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/api/employees', methods=['GET'])
 def get_employees():

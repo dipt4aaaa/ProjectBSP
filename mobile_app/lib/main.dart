@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
+import 'login_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,6 +12,7 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+  final String apiUrl = "http://192.168.100.205:5050/api"; // Ganti IP sesuai server
 
   @override
   Widget build(BuildContext context) {
@@ -23,14 +25,15 @@ class MyApp extends StatelessWidget {
           behavior: SnackBarBehavior.floating,
         ),
       ),
-      home: const AttendancePage(),
+      home: LoginPage(apiUrl: apiUrl),
       debugShowCheckedModeBanner: false,
     );
   }
 }
 
 class AttendancePage extends StatefulWidget {
-  const AttendancePage({super.key});
+  final String username;
+  const AttendancePage({super.key, required this.username});
 
   @override
   State<AttendancePage> createState() => _AttendancePageState();
@@ -134,7 +137,10 @@ class _AttendancePageState extends State<AttendancePage> {
       var res = await http.post(
         Uri.parse(apiUrl),
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"image": base64Image}),
+        body: jsonEncode({
+          "image": base64Image,
+          "username": widget.username,
+        }),
       )
       .timeout(const Duration(seconds: 20));
       
@@ -208,6 +214,21 @@ class _AttendancePageState extends State<AttendancePage> {
             title: const Text("Absensi Wajah"),
             centerTitle: true,
             elevation: 2,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.logout),
+                tooltip: "Logout",
+                onPressed: () {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => LoginPage(apiUrl: "http://192.168.100.205:5050/api"),
+                    ),
+                    (route) => false,
+                  );
+                },
+              ),
+            ],
           ),
           body: SingleChildScrollView(
             child: Padding(

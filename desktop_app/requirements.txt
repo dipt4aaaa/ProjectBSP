@@ -8,3 +8,5 @@ dlib==19.22.99
 cmake==4.0.3
 flask==2.3.3
 flask-cors==4.0.0
+pyjwt==2.10.1
+werkzeug==3.1.3
