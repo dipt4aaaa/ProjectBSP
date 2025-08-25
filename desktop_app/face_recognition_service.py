@@ -10,6 +10,7 @@ import json
 import numpy as np
 from typing import Optional, List, Dict, Tuple
 from desktop_database_config import DesktopDatabaseConfig
+from werkzeug.security import generate_password_hash
 
 
 class FaceRecognitionService:
@@ -30,7 +31,7 @@ class FaceRecognitionService:
         self.known_face_data = []
         self.load_known_faces()
     
-    def register_employee(self, name: str, departemen: str, posisi: str, image_data) -> Dict:
+    def register_employee(self, name: str, departemen: str, posisi: str, image_data, username, password) -> Dict:
         """
         Register employee dengan wajah baru
         
@@ -57,59 +58,34 @@ class FaceRecognitionService:
             if frame is None:
                 return {"status": "error", "message": "Cannot read image"}
             
+            # Simpan JPG dengan nama karyawan
+            jpg_filename = os.path.join(self.data_dir, f"{name}.jpg")
+            cv2.imwrite(jpg_filename, frame)
+
             # Deteksi wajah
             face_locations = face_recognition.face_locations(frame)
-            if not face_locations:
+            if len(face_locations) == 0:
                 return {"status": "error", "message": "No face detected in image"}
-            
-            # Ambil wajah pertama yang terdeteksi
-            top, right, bottom, left = face_locations[0]
-            
-            # Perluasan bounding box
-            margin = 20
-            height, width = frame.shape[:2]
-            top = max(0, top - margin)
-            right = min(width, right + margin)
-            bottom = min(height, bottom + margin)
-            left = max(0, left - margin)
-            
-            face_image = frame[top:bottom, left:right]
-            
-            # Simpan gambar wajah
-            image_path = os.path.join(self.data_dir, f"{name}.jpg")
-            cv2.imwrite(image_path, face_image)
-            
-            # Dapatkan face encoding
-            face_encoding = face_recognition.face_encodings(frame, face_locations)[0]
-            
-            # Simpan face encoding sebagai file
+
+            face_encodings = face_recognition.face_encodings(frame, face_locations)
+            if len(face_encodings) == 0:
+                return {"status": "error", "message": "Face encoding failed"}
+
+            encoding = face_encodings[0]
             encoding_path = os.path.join(self.data_dir, f"{name}_encoding.json")
             with open(encoding_path, 'w') as f:
-                json.dump(face_encoding.tolist(), f)
-            
-            # Simpan ke database
+                json.dump(encoding.tolist(), f)
+
+            password_hash = generate_password_hash(password)
+
             cursor = self.conn.cursor()
             cursor.execute('''
-                INSERT INTO karyawan (nama, departemen, posisi, face_encoding_path)
-                VALUES (%s, %s, %s, %s)
-            ''', (name, departemen, posisi, encoding_path))
-            
+                INSERT INTO karyawan (nama, departemen, posisi, face_encoding_path, username, password_hash)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            ''', (name, departemen, posisi, encoding_path, username, password_hash))
             self.conn.commit()
-            
-            # Reload known faces
             self.load_known_faces()
-            
-            return {
-                "status": "success", 
-                "message": f"Employee {name} registered successfully",
-                "data": {
-                    "name": name,
-                    "departemen": departemen,
-                    "posisi": posisi,
-                    "image_path": image_path
-                }
-            }
-            
+            return {"status": "success", "message": f"Employee {name} registered successfully"}
         except Exception as e:
             return {"status": "error", "message": f"Registration failed: {str(e)}"}
     
@@ -124,36 +100,43 @@ class FaceRecognitionService:
             Dict dengan hasil absensi
         """
         try:
-            # Ambil encoding wajah user ini saja
-            cursor = self.conn.cursor()
-            cursor.execute("SELECT face_encoding_path, nama, departemen, posisi FROM karyawan WHERE username = %s", (username,))
-            user = cursor.fetchone()
-            if not user:
-                return {'status': 'error', 'message': 'User not found'}
-
-            encoding_path, nama, departemen, posisi = user
-            # Load encoding dari file
-            with open(encoding_path, 'r') as f:
-                encoding = np.array(json.load(f))
-
-            # Deteksi wajah pada image_data
             face_locations = face_recognition.face_locations(image_data)
-            if not face_locations:
+            if len(face_locations) == 0:
                 return {'status': 'error', 'message': 'No face detected'}
 
             face_encodings = face_recognition.face_encodings(image_data, face_locations)
-            if not face_encodings:
+            if len(face_encodings) == 0:
                 return {'status': 'error', 'message': 'Face encoding failed'}
-
+                    
             # Ambil lokasi wajah pertama
-            top, right, bottom, left = face_locations[0]
-            # Sekarang variabel top, right, bottom, left sudah terdefinisi
-            # crop_face = image_data[top:bottom, left:right]  # jika ingin crop
 
-            # Bandingkan hanya dengan encoding user ini
-            match = face_recognition.compare_faces([encoding], face_encodings[0])[0]
-            if not match:
-                return {'status': 'error', 'message': 'Wajah tidak cocok dengan akun ini'}
+            top, right, bottom, left = face_locations[0]
+
+            if username:
+                # ABSENSI API/FLUTTER: hanya cocokkan dengan user ini
+                cursor = self.conn.cursor()
+                cursor.execute("SELECT face_encoding_path, nama, departemen, posisi FROM karyawan WHERE username = %s", (username,))
+                user = cursor.fetchone()
+                if not user:
+                    return {'status': 'error', 'message': 'User not found'}
+                encoding_path, nama, departemen, posisi = user
+                with open(encoding_path, 'r') as f:
+                    encoding = np.array(json.load(f))
+                matches = face_recognition.compare_faces([encoding], face_encodings[0])
+                if not matches[0]:
+                    return {'status': 'error', 'message': 'Wajah tidak cocok dengan akun ini'}
+            else:
+                # ABSENSI DESKTOP: cocokkan dengan semua encoding
+                self.load_known_faces()
+                matches = face_recognition.compare_faces(
+                    [np.array(enc) for enc in self.known_face_encodings], face_encodings[0]
+                )
+                if True not in matches:
+                    return {'status': 'error', 'message': 'Wajah tidak dikenali'}
+                idx = matches.index(True)
+                nama = self.known_face_data[idx]['nama']
+                departemen = self.known_face_data[idx]['departemen']
+                posisi = self.known_face_data[idx]['posisi']
 
             # Generate timestamp
             now = datetime.datetime.now()

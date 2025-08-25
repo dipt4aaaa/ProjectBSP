@@ -109,16 +109,15 @@ class AbsensiApp:
         """Dialog pendaftaran karyawan menggunakan service"""
         dialog = EmployeeRegistrationDialog(self.root)
         if dialog.result:
-            nama, departemen, posisi = dialog.result
-            
+            nama, departemen, posisi, username, password = dialog.result
+
             ret, frame = self.cap.read()
             if ret:
-                # Gunakan service untuk register employee
-                result = self.face_service.register_employee(nama, departemen, posisi, frame)
-                
+                result = self.face_service.register_employee(
+                    nama, departemen, posisi, frame, username=username, password=password
+                )
                 if result['status'] == 'success':
                     messagebox.showinfo("Berhasil", result['message'])
-                    # Update status
                     self.update_status()
                 else:
                     messagebox.showerror("Error", result['message'])
@@ -241,7 +240,17 @@ class EmployeeRegistrationDialog:
         posisi_combo = ttk.Combobox(main_frame, textvariable=self.posisi_var, 
                                    font=("Arial", 10), width=28)
         posisi_combo['values'] = ('Manager', 'Senior Staff', 'Staff', 'Junior Staff', 'Intern')
-        posisi_combo.pack(pady=(0, 20), fill="x")
+        posisi_combo.pack(pady=(0, 10), fill="x")
+
+        # Username
+        tk.Label(main_frame, text="Username:", font=("Arial", 10)).pack(anchor="w")
+        self.username_entry = tk.Entry(main_frame, font=("Arial", 10), width=30)
+        self.username_entry.pack(pady=(0, 10), fill="x")
+
+        # Password
+        tk.Label(main_frame, text="Password:", font=("Arial", 10)).pack(anchor="w")
+        self.password_entry = tk.Entry(main_frame, font=("Arial", 10), width=30, show="*")
+        self.password_entry.pack(pady=(0, 20), fill="x")
         
         # Buttons
         button_frame = tk.Frame(main_frame)
@@ -262,12 +271,14 @@ class EmployeeRegistrationDialog:
         nama = self.nama_entry.get().strip()
         departemen = self.departemen_var.get().strip()
         posisi = self.posisi_var.get().strip()
-        
-        if not nama or not departemen or not posisi:
+        username = self.username_entry.get().strip()
+        password = self.password_entry.get().strip()
+
+        if not nama or not departemen or not posisi or not username or not password:
             messagebox.showerror("Error", "Semua field harus diisi!")
             return
-        
-        self.result = (nama, departemen, posisi)
+
+        self.result = (nama, departemen, posisi, username, password)
         self.dialog.destroy()
     
     def cancel(self):
