@@ -142,7 +142,18 @@ class _AttendancePageState extends State<AttendancePage> {
 
       if (res.statusCode == 200) {
         setState(() => _imageFile = null); // Bersihkan foto setelah sukses
-        _showStatus("Absensi berhasil!", Colors.green);
+        try {
+          final body = jsonDecode(res.body);
+          String nama = body['data']?['nama'] ?? '';
+          String jam = body['data']?['jam'] ?? '';
+          String msg = "Absensi berhasil";
+          if (nama.isNotEmpty && jam.isNotEmpty) {
+            msg = "Absensi berhasil!\nNama: $nama\nJam: $jam";
+          }
+          _showStatus(msg, Colors.green);
+        } catch (_) {
+          _showStatus("Absensi berhasil!", Colors.green);
+        }
       } else {
         // Ambil pesan error dari API
         String errMsg = "Gagal: ${res.body}";
@@ -153,7 +164,7 @@ class _AttendancePageState extends State<AttendancePage> {
             if (msg.contains('no face detected')) {
               errMsg = "Wajah tidak terdeteksi. Pastikan wajah terlihat jelas di kamera.";
             } else if (msg.contains('not recognized') || msg.contains('tidak dikenali')) {
-              errMsg = "Wajah tidak dikenali. Silakan daftar terlebih dahulu.";
+              errMsg = "Wajah tidak dikenali. Pastikan pencahayaan bagus.";
             } else {
               errMsg = body['message'];
             }
