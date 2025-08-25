@@ -42,7 +42,7 @@ services:
     volumes:
       - ../desktop_app/log_absensi:/app/static/images:ro # Mount log absensi folder as read-only
 
-  # pgAdmin (Optional - for database management)
+  # pgAdmin (for database management)
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: absensi_pgadmin
