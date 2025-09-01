@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'main.dart'; 
 
+String? globalAccessToken;
+
 class LoginPage extends StatefulWidget {
   final String apiUrl;
   const LoginPage({super.key, required this.apiUrl});
@@ -30,14 +32,15 @@ class _LoginPageState extends State<LoginPage> {
 
     if (res.statusCode == 200) {
       final body = jsonDecode(res.body);
+      globalAccessToken = body['access_token']; // Simpan token JWT
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Login sukses! Selamat datang ${body['data']['nama']}"), backgroundColor: Colors.green),
       );
-      // Navigasi ke halaman absensi, kirim username
+      // Navigasi ke halaman presensi, kirim token
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => AttendancePage(username: _usernameController.text.trim()),
+          builder: (context) => AttendancePage(accessToken: globalAccessToken!),
         ),
       );
     } else {
@@ -88,7 +91,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      "Silakan login untuk absensi wajah",
+                      "Silakan login untuk presensi wajah",
                       style: TextStyle(color: Colors.grey[700]),
                     ),
                     const SizedBox(height: 24),

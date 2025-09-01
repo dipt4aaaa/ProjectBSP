@@ -122,14 +122,14 @@ class FaceRecognitionService:
                 encoding_path, nama, departemen, posisi = user
                 with open(encoding_path, 'r') as f:
                     encoding = np.array(json.load(f))
-                matches = face_recognition.compare_faces([encoding], face_encodings[0])
+                matches = face_recognition.compare_faces([encoding], face_encodings[0], tolerance=0.45)
                 if not matches[0]:
                     return {'status': 'error', 'message': 'Wajah tidak cocok dengan akun ini'}
             else:
                 # ABSENSI DESKTOP: cocokkan dengan semua encoding
                 self.load_known_faces()
                 matches = face_recognition.compare_faces(
-                    [np.array(enc) for enc in self.known_face_encodings], face_encodings[0]
+                    [np.array(enc) for enc in self.known_face_encodings], face_encodings[0], tolerance=0.45
                 )
                 if True not in matches:
                     return {'status': 'error', 'message': 'Wajah tidak dikenali'}

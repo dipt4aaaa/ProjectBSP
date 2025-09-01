@@ -12,12 +12,12 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-  final String apiUrl = "http://192.168.100.205:5050/api"; // Ganti IP sesuai server
+  final String apiUrl = "http://192.168.100.15:5050/api"; // Ganti IP sesuai server
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Absensi Wajah',
+      title: 'Presensi Wajah',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: Colors.grey[100],
@@ -32,8 +32,8 @@ class MyApp extends StatelessWidget {
 }
 
 class AttendancePage extends StatefulWidget {
-  final String username;
-  const AttendancePage({super.key, required this.username});
+  final String accessToken; // Ganti dari username ke accessToken
+  const AttendancePage({super.key, required this.accessToken});
 
   @override
   State<AttendancePage> createState() => _AttendancePageState();
@@ -45,11 +45,11 @@ class _AttendancePageState extends State<AttendancePage> {
   String? _lastStatus;
   Color? _lastStatusColor;
 
-  final String apiUrl = "http://192.168.100.205:5050/api/absensi"; // Ganti IP laptop
+  final String apiUrl = "http://192.168.100.15:5050/api/absensi"; // Ganti IP laptop
 
   // Lokasi kantor
-  final double officeLat = 0.51195;
-  final double officeLon = 101.44910;
+  final double officeLat = 0.57041;
+  final double officeLon = 101.42002;
   final double maxDistanceMeters = 100;
 
   final ImagePicker _picker = ImagePicker();
@@ -126,7 +126,7 @@ class _AttendancePageState extends State<AttendancePage> {
     bool inOffice = await _isAtOffice();
     if (!inOffice) {
       setState(() => _isLoading = false);
-      _showStatus(_locationError ?? "Harus di kantor untuk absensi!", Colors.red);
+      _showStatus(_locationError ?? "Harus di kantor untuk presensi!", Colors.red);
       return;
     }
 
@@ -136,10 +136,12 @@ class _AttendancePageState extends State<AttendancePage> {
     try {
       var res = await http.post(
         Uri.parse(apiUrl),
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer ${widget.accessToken}", // Tambahkan header Authorization
+        },
         body: jsonEncode({
           "image": base64Image,
-          "username": widget.username,
         }),
       )
       .timeout(const Duration(seconds: 20));
@@ -152,13 +154,13 @@ class _AttendancePageState extends State<AttendancePage> {
           final body = jsonDecode(res.body);
           String nama = body['data']?['nama'] ?? '';
           String jam = body['data']?['jam'] ?? '';
-          String msg = "Absensi berhasil";
+          String msg = "Presensi berhasil";
           if (nama.isNotEmpty && jam.isNotEmpty) {
-            msg = "Absensi berhasil!\nNama: $nama\nJam: $jam";
+            msg = "Presensi berhasil!\nNama: $nama\nJam: $jam";
           }
           _showStatus(msg, Colors.green);
         } catch (_) {
-          _showStatus("Absensi berhasil!", Colors.green);
+          _showStatus("Presensi berhasil!", Colors.green);
         }
       } else {
         // Ambil pesan error dari API
@@ -211,7 +213,7 @@ class _AttendancePageState extends State<AttendancePage> {
       children: [
         Scaffold(
           appBar: AppBar(
-            title: const Text("Absensi Wajah"),
+            title: const Text("Presensi Wajah"),
             centerTitle: true,
             elevation: 2,
             actions: [
@@ -271,7 +273,7 @@ class _AttendancePageState extends State<AttendancePage> {
                                         height: 18,
                                         child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                                       )
-                                    : const Text("Kirim Absensi"),
+                                    : const Text("Kirim Presensi"),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.green[700],
                                   minimumSize: const Size(120, 40),

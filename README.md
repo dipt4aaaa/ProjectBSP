@@ -152,6 +152,8 @@ Base URL: `http://localhost:5050/api`
 
 ### Dashboard API
 
+Base URL `http://localhost:5000/api`
+
 - `GET /api/dashboard-summary` - Ringkasan data dashboard
 - `GET /api/log-absensi` - Data log absensi dengan filter
 - `GET /api/departemen` - List departemen

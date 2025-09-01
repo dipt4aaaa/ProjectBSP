@@ -18,7 +18,7 @@ from face_recognition_service import FaceRecognitionService
 class AbsensiApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Sistem Absensi Face Recognition")
+        self.root.title("Sistem Presensi Face Recognition")
         self.root.geometry("900x700")
 
         # Initialize face recognition service
@@ -59,7 +59,7 @@ class AbsensiApp:
 
         absensi_button = tk.Button(
             button_frame, 
-            text="Absensi", 
+            text="Presensi", 
             command=self.lakukan_absensi,
             bg="#2196F3",
             fg="white",
@@ -134,14 +134,14 @@ class AbsensiApp:
             if result['status'] == 'success':
                 data = result['data']
                 messagebox.showinfo(
-                    "Absensi Berhasil", 
-                    f"Absensi untuk {data['nama']} berhasil!\n"
+                    "Presensi Berhasil", 
+                    f"Presensi untuk {data['nama']} berhasil!\n"
                     f"Departemen: {data['departemen']}\n"
                     f"Posisi: {data['posisi']}\n"
                     f"Waktu: {data['tanggal']} {data['jam']}"
                 )
             else:
-                messagebox.showerror("Absensi Gagal", result['message'])
+                messagebox.showerror("Presensi Gagal", result['message'])
         else:
             messagebox.showerror("Error", "Tidak dapat mengambil gambar dari kamera")
 
@@ -199,7 +199,7 @@ class EmployeeRegistrationDialog:
         # Create dialog window
         self.dialog = tk.Toplevel(parent)
         self.dialog.title("Pendaftaran Karyawan")
-        self.dialog.geometry("400x300")
+        self.dialog.geometry("600x500")
         self.dialog.transient(parent)
         self.dialog.grab_set()
         

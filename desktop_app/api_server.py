@@ -11,9 +11,14 @@ import io
 import os
 from face_recognition_service import FaceRecognitionService
 from werkzeug.security import check_password_hash
+from flask_jwt_extended import (
+    JWTManager, create_access_token, jwt_required, get_jwt_identity
+)
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS untuk Flutter
+app.config['JWT_SECRET_KEY'] = 'memacak-tanah-menjunjung-tinggi'  
+CORS(app)
+jwt = JWTManager(app)
 
 # Initialize face recognition service
 face_service = FaceRecognitionService()
@@ -103,9 +108,11 @@ def login():
             return jsonify({'status': 'error', 'message': 'Invalid password'}), 401
 
         # Sukses login
+        access_token = create_access_token(identity=username)
         return jsonify({
             'status': 'success',
             'message': 'Login successful',
+            'access_token': access_token,
             'data': {
                 'id': user_id,
                 'nama': nama,
@@ -173,6 +180,7 @@ def register_employee():
         }), 500
 
 @app.route('/api/absensi', methods=['POST'])
+@jwt_required()
 def do_attendance():
     """
     Lakukan absensi berdasarkan foto wajah
@@ -184,10 +192,10 @@ def do_attendance():
     """
     try:
         data = request.get_json()
-        if not data or 'image' not in data or 'username' not in data:
-            return jsonify({'status': 'error', 'message': 'Image and username required'}), 400
+        if not data or 'image' not in data:
+            return jsonify({'status': 'error', 'message': 'Image required'}), 400
 
-        username = data['username']
+        username = get_jwt_identity()
         image = decode_base64_image(data['image'])
 
         # Panggil service dengan username
@@ -200,6 +208,7 @@ def do_attendance():
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/api/employees', methods=['GET'])
+@jwt_required()
 def get_employees():
     """
     Get daftar semua karyawan
@@ -219,6 +228,7 @@ def get_employees():
         }), 500
 
 @app.route('/api/attendance-logs', methods=['GET'])
+@jwt_required()
 def get_attendance_logs():
     """
     Get log absensi
@@ -246,6 +256,7 @@ def get_attendance_logs():
         }), 500
 
 @app.route('/api/reload-faces', methods=['POST'])
+@jwt_required()
 def reload_faces():
     """
     Reload known faces dari database
@@ -296,6 +307,7 @@ if __name__ == '__main__':
     print("🚀 Starting Face Recognition API...")
     print("📱 Flutter endpoints available:")
     print("   POST /api/register      - Register new employee")
+    print("   POST /api/login       - Record attendance")
     print("   POST /api/absensi       - Record attendance")
     print("   GET  /api/employees     - Get all employees")
     print("   GET  /api/attendance-logs - Get attendance logs")
