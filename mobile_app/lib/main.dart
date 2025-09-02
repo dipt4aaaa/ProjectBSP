@@ -12,7 +12,7 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-  final String apiUrl = "http://192.168.100.15:5050/api"; // Ganti IP sesuai server
+  final String apiUrl = "http://192.168.100.205:5050/api"; // Ganti IP sesuai server
 
   @override
   Widget build(BuildContext context) {
@@ -45,11 +45,11 @@ class _AttendancePageState extends State<AttendancePage> {
   String? _lastStatus;
   Color? _lastStatusColor;
 
-  final String apiUrl = "http://192.168.100.15:5050/api/absensi"; // Ganti IP laptop
+  final String apiUrl = "http://192.168.100.205:5050/api/absensi"; // Ganti IP laptop
 
   // Lokasi kantor
-  final double officeLat = 0.57041;
-  final double officeLon = 101.42002;
+  final double officeLat = 0.51194;
+  final double officeLon = 101.44910;
   final double maxDistanceMeters = 100;
 
   final ImagePicker _picker = ImagePicker();

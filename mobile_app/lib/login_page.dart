@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'main.dart'; 
@@ -20,37 +21,57 @@ class _LoginPageState extends State<LoginPage> {
 
   void _login() async {
     setState(() => _isLoading = true);
-    final res = await http.post(
-      Uri.parse('${widget.apiUrl}/login'),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "username": _usernameController.text.trim(),
-        "password": _passwordController.text
-      }),
-    );
-    setState(() => _isLoading = false);
+    try {
+      final res = await http
+          .post(
+            Uri.parse('${widget.apiUrl}/login'),
+            headers: {"Content-Type": "application/json"},
+            body: jsonEncode({
+              "username": _usernameController.text.trim(),
+              "password": _passwordController.text
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
+      setState(() => _isLoading = false);
 
-    if (res.statusCode == 200) {
-      final body = jsonDecode(res.body);
-      globalAccessToken = body['access_token']; // Simpan token JWT
+      if (res.statusCode == 200) {
+        final body = jsonDecode(res.body);
+        globalAccessToken = body['access_token']; // Simpan token JWT
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Login sukses! Selamat datang ${body['data']['nama']}"), backgroundColor: Colors.green),
+        );
+        // Navigasi ke halaman presensi, kirim token
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AttendancePage(accessToken: globalAccessToken!),
+          ),
+        );
+      } else {
+        String msg = "Login gagal";
+        try {
+          final body = jsonDecode(res.body);
+          msg = body['message'] ?? msg;
+        } catch (_) {}
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(msg), backgroundColor: Colors.red),
+        );
+      }
+    } on TimeoutException {
+      setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Login sukses! Selamat datang ${body['data']['nama']}"), backgroundColor: Colors.green),
-      );
-      // Navigasi ke halaman presensi, kirim token
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => AttendancePage(accessToken: globalAccessToken!),
+        const SnackBar(
+          content: Text("Tidak dapat terhubung ke server. Silakan coba lagi nanti."),
+          backgroundColor: Colors.red,
         ),
       );
-    } else {
-      String msg = "Login gagal";
-      try {
-        final body = jsonDecode(res.body);
-        msg = body['message'] ?? msg;
-      } catch (_) {}
+    } catch (e) {
+      setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(msg), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text("Terjadi kesalahan: $e"),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
